@@ -1,10 +1,11 @@
 import csv
-from argparse import ArgumentParser
+import os
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+from argparse import ArgumentParser
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
-import matplotlib.pyplot as plt
 
 
 parser = ArgumentParser(prog='pca-csv', description='Quickly execute a principal component analysis on a CSV.')
@@ -46,9 +47,9 @@ for column_name, dtype in zip(df.columns, df.dtypes):
     drop(column_name)
     print(f'{YELLOW}Warning{END}: Automatically ignoring column {BOLD}{column_name}{END} because {BOLD}{dtype}{END} is a non-numeric data type.')
 
+
 data = df.loc[:, features].values
 
-# TODO add warning for this
 if df.isnull().values.any():
   df.fillna(0.0, inplace=True)
   print('Warning: Found NaN values in input, defaulting to 0')
@@ -65,8 +66,12 @@ principal_df = pd.DataFrame(data = principal_components, columns = ['principal c
 final_df = pd.concat([principal_df, df[[target]]], axis = 1)
 
 fig = plt.figure(figsize = (12,12))
+fig.canvas.manager.set_window_title('pca-csv')
+
 ax = fig.add_subplot(1,1,1) 
-ax.set_title('2-Component PCA', fontsize = 30)
+
+file_title = os.path.basename(args.csv_path).replace('.csv', '')
+ax.set_title(f'2-Component PCA: {file_title}', fontsize = 30)
 
 plt.xticks([], [])
 plt.yticks([], [])
@@ -78,28 +83,40 @@ max_x = max(final_df['principal component 1'])
 min_y = min(final_df['principal component 2'])
 max_y = max(final_df['principal component 2'])
 
+max_len = max(abs(min_x), abs(max_x), abs(min_y), abs(max_y))
+min_x = -max_len
+max_x = max_len
+min_y = -max_len
+max_y = max_len
+
+# Label axes
+ax.text(min_x - 0.55, -0.05, '- PC1', fontsize = 15)
+ax.text(max_x + 0.1, -0.05, '+ PC1', fontsize = 15)
+
+ax.text(-0.25, min_y - 0.25, '- PC2', fontsize = 15)
+ax.text(-0.3, max_y + 0.1, '+ PC2', fontsize = 15)
 
 
-ax.text(min_x, 0, '- pc1', fontsize = 15)
-ax.text(max_x, 0, '+ pc1', fontsize = 15)
+all_indices_to_keep = [(t, final_df[target] == t) for t in possible_target_values]
+each_count = [sum(1 if val else 0 for val in sublist[1]) for sublist in all_indices_to_keep]
 
-ax.text(0, min_y, '- pc2', fontsize = 15)
-ax.text(0, max_y, '+ pc2', fontsize = 15)
-
-
-# TODO - should do automatically by checking for very close values and shifting them a bit with some noise
+annotate_pts = False
+if all(val == 1 for val in each_count):
+  annotate_pts = True
 
 
-for t in possible_target_values:
-  row_indices_to_keep = final_df[target] == t
+for t, row_indices_to_keep in all_indices_to_keep:
+  ax.scatter(final_df.loc[row_indices_to_keep, 'principal component 1'],
+             final_df.loc[row_indices_to_keep, 'principal component 2'],
+             s=5)
+  
+  if annotate_pts:
+    ax.text(final_df.loc[row_indices_to_keep, 'principal component 1'].iloc[0] + 0.03,
+            final_df.loc[row_indices_to_keep, 'principal component 2'].iloc[0],
+            t)
 
-  ax.scatter(final_df.loc[row_indices_to_keep, 'principal component 1']
-            , final_df.loc[row_indices_to_keep, 'principal component 2']
-            , s = 20)
-
-# TODO feature where if only a single one per row_indices_to_keep, then just label each of them individually instead
-# of using a legend. only use a legend if multiple values per thing.
-ax.legend(possible_target_values)
+if not annotate_pts:
+  ax.legend(possible_target_values)
 
 ax.grid()
 
@@ -111,12 +128,12 @@ print()
 print('% Variance Explained:')
 print(pca.explained_variance_ratio_)
 print()
+
 print('Component Vectors:')
 print(pca.components_.round(2))
 print()
 
 
-# PCA Explained
 for component in range(len(pca.components_)):
   print(f'Component {component+1}:')
   for feature, weight in sorted(zip(features, pca.components_[component]), key=lambda x: abs(x[1]), reverse=True):
