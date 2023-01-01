@@ -4,7 +4,7 @@ Run a quick principal component analysis on a CSV file from the command line and
 
 ## Usage
 
-```pca-csv flowers.csv species```
+```pca-csv assets/flowers.csv species```
 
 <img src="assets/flowers_pca.png" width="350">
 
