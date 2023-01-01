@@ -26,6 +26,6 @@ Then, in your `.zshrc`, add the line:
 
 `export PATH="$HOME/bin:$PATH"`
 
-Then, `mv pca-csv ~/bin`
+Then, `mv pca-csv ~/bin`.
 
-Finally, run `source ~./zshrc`. You should now be able to run `pca-csv` from anywhere.
+Finally, run `source ~/.zshrc`. You should now be able to run `pca-csv` from anywhere.
