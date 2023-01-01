@@ -67,7 +67,7 @@ principal_components = pca.fit_transform(data)
 principal_df = pd.DataFrame(data = principal_components, columns = ['principal component 1', 'principal component 2'])
 final_df = pd.concat([principal_df, df[[target]]], axis = 1)
 
-fig = plt.figure(figsize = (8,8))
+fig = plt.figure(figsize = (7,7))
 fig.canvas.manager.set_window_title('pca-csv')
 
 ax = fig.add_subplot(1,1,1) 
@@ -92,7 +92,7 @@ min_y = -max_len
 max_y = max_len
 
 # Label axes
-ax.text(min_x - 0.55, -0.05, '- PC1', fontsize = 10)
+ax.text(min_x - 0.55, -0.06, '- PC1', fontsize = 10)
 ax.text(max_x + 0.1, -0.05, '+ PC1', fontsize = 10)
 
 ax.text(-0.25, min_y - 0.25, '- PC2', fontsize = 10)
