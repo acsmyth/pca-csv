@@ -1,3 +1,4 @@
+#!/usr/local/bin/python3
 import csv
 import os
 import pandas as pd
@@ -25,14 +26,15 @@ possible_target_values = list(set(df[target]))
 
 features = list(df.columns)
 
+BOLD = '\033[1m'
+YELLOW = '\033[93m'
+END = '\033[0m'
+
 for column_name, dtype in zip(df.columns, df.dtypes):
   def drop(cl_name):
     df.drop(cl_name, axis=1, inplace=True)
     features.remove(cl_name)
   
-  BOLD = '\033[1m'
-  YELLOW = '\033[93m'
-  END = '\033[0m'
 
   if column_name in args.exclude:
     features.remove(column_name)
@@ -52,11 +54,11 @@ data = df.loc[:, features].values
 
 if df.isnull().values.any():
   df.fillna(0.0, inplace=True)
-  print('Warning: Found NaN values in input, defaulting to 0')
+  print(f'{YELLOW}Warning{END}: Found NaN values in input, defaulting to 0')
 
 data = StandardScaler().fit_transform(data)
 if np.isnan(data).any():
-  print('Warning: Found NaN values after normalizing, defaulting to 0')
+  print(f'{YELLOW}Warning{END}: Found NaN values after normalizing, defaulting to 0')
   data[np.isnan(data)] = 0
 
 
@@ -65,13 +67,13 @@ principal_components = pca.fit_transform(data)
 principal_df = pd.DataFrame(data = principal_components, columns = ['principal component 1', 'principal component 2'])
 final_df = pd.concat([principal_df, df[[target]]], axis = 1)
 
-fig = plt.figure(figsize = (12,12))
+fig = plt.figure(figsize = (8,8))
 fig.canvas.manager.set_window_title('pca-csv')
 
 ax = fig.add_subplot(1,1,1) 
 
 file_title = os.path.basename(args.csv_path).replace('.csv', '')
-ax.set_title(f'2-Component PCA: {file_title}', fontsize = 30)
+ax.set_title(f'2-Component PCA: {file_title}', fontsize = 20)
 
 plt.xticks([], [])
 plt.yticks([], [])
@@ -90,11 +92,11 @@ min_y = -max_len
 max_y = max_len
 
 # Label axes
-ax.text(min_x - 0.55, -0.05, '- PC1', fontsize = 15)
-ax.text(max_x + 0.1, -0.05, '+ PC1', fontsize = 15)
+ax.text(min_x - 0.55, -0.05, '- PC1', fontsize = 10)
+ax.text(max_x + 0.1, -0.05, '+ PC1', fontsize = 10)
 
-ax.text(-0.25, min_y - 0.25, '- PC2', fontsize = 15)
-ax.text(-0.3, max_y + 0.1, '+ PC2', fontsize = 15)
+ax.text(-0.25, min_y - 0.25, '- PC2', fontsize = 10)
+ax.text(-0.3, max_y + 0.1, '+ PC2', fontsize = 10)
 
 
 all_indices_to_keep = [(t, final_df[target] == t) for t in possible_target_values]
@@ -113,7 +115,8 @@ for t, row_indices_to_keep in all_indices_to_keep:
   if annotate_pts:
     ax.text(final_df.loc[row_indices_to_keep, 'principal component 1'].iloc[0] + 0.03,
             final_df.loc[row_indices_to_keep, 'principal component 2'].iloc[0],
-            t)
+            t,
+            size=5)
 
 if not annotate_pts:
   ax.legend(possible_target_values)
@@ -141,3 +144,6 @@ for component in range(len(pca.components_)):
   print()
 
 plt.show()
+
+# TODO add ability to add labels to pc1 and pc2
+# TODO add ability to change font size, legend vs annotated points, size of dot itself, colors of dots
